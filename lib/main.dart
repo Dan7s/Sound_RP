@@ -142,7 +142,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 						valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
 						value: (_position.inMilliseconds < _duration.inMilliseconds &&
 							_position.inMilliseconds > 0)
-							? _position.inMilliseconds / _duration.inMilliseconds : (_playerState == PlayerState.playing) ? null : 0.0,	
+							? _position.inMilliseconds / _duration.inMilliseconds : 
+							(_playerState == PlayerState.playing) ? null : 0.0,	
 					),
 				],
 			),

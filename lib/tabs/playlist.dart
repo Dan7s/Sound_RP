@@ -65,8 +65,9 @@ class Track {			//track obj class
 	final String name;
 	final String link;
 	final int id;
+	final int loop;
 
-	Track(this.name, this.link, this.id);
+	Track(this.name, this.link, this.loop, this.id);
 }
 
 bool isFirstTrack(id) {
