@@ -82,6 +82,72 @@ Future deleteTrack(Track track) async { 		//track deleting
 	tracks.remove(track);
 }
 
+Future<int> loopChange(BuildContext context, track) async {
+	int loopValue = track.loop;
+	
+	final _formKey = GlobalKey<FormState>();
+	
+	return showDialog(
+		context : context,
+		builder: (BuilderContext context) {
+			return SimpleDialog(
+				backgroundColor: Colors.black,
+				title: Text("Loop input", style: TextStyle(color: Colors.white)),
+				children: [
+					Center(
+						child: Column(
+							mainAxisAlignment: MainAxisAlignment.spaceBetween,
+							children: [
+								Form(
+									key: _formKey,
+									child: Column(
+										mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+										children: [
+											TextFormField(
+												decoration: const InputDecoration(
+													filled: true,
+													fillColor: Colors.grey,
+													focusColor: Colors.green,
+												),
+												validator: (value) {
+													if (value.isEmpty) {
+														return 'Please enter track name';
+													}
+												},
+												onSaved: (val) => loopValue = val,
+												initialValue: loopValue,
+											),
+											Padding(
+												padding: const EdgeInsets.symmetric(vertical: 16.0),
+												child: RaisedButton(
+													color: Colors.grey[700],
+													onPressed: () {
+														if (_formKey.currentState.validate()) {
+															_formKey.currentState.save();
+															
+															Navigator.pop(context, val);
+														}
+														else {
+															Navigator.pop(context, null);
+														}											
+													},
+													child: Text("Add", style: TextStyle(color: Colors.white))
+												),
+											),
+											
+										],
+									),
+								),
+							],
+						),
+					),
+				],
+			),
+		}
+	),
+}
+
 Future<Track> addTrack(BuildContext context, idCounter) async {		//adding tacks dialog
 	String name;
 	String link;
