@@ -25,11 +25,25 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 								child: ListTile(
 									title: Text(track.name.toString(), style: TextStyle(color: Colors.white)),
 									leading: isFirstTrack(track.id) ? Icon(Icons.play_circle_outline, color: Colors.green) :  Icon(Icons.drag_handle, color: Colors.green),
-									trailing: IconButton(
-										icon: Icon(Icons.delete, color: Colors.green),
-										tooltip: 'Delete track',
-										onPressed: () => {deleteTrack(track), setState(() {})},
-									),								
+									trailing: PopupMenuButton<int>(
+										onSelected: (value) {
+											if (value == 1){ deleteTrack(track); setState((){}); };
+										},
+										offset: Offset(0, 100),
+										color: Colors.grey[700],
+										icon: Icon(Icons.more_vert, color: Colors.green),
+										itemBuilder: (context) => [
+											PopupMenuItem(
+												value: 1,
+												child: Row(
+													children: <Widget>[
+														Icon(Icons.delete, color: Colors.green),
+														Text("Delete", style: TextStyle(color: Colors.white)),
+													],
+												),
+											),
+										],								
+									),
 								),
 								key: ObjectKey(track.id),
 							),
@@ -80,72 +94,6 @@ bool isFirstTrack(id) {
 
 Future deleteTrack(Track track) async { 		//track deleting
 	tracks.remove(track);
-}
-
-Future<int> loopChange(BuildContext context, track) async {
-	int loopValue = track.loop;
-	
-	final _formKey = GlobalKey<FormState>();
-	
-	return showDialog(
-		context : context,
-		builder: (BuilderContext context) {
-			return SimpleDialog(
-				backgroundColor: Colors.black,
-				title: Text("Loop input", style: TextStyle(color: Colors.white)),
-				children: [
-					Center(
-						child: Column(
-							mainAxisAlignment: MainAxisAlignment.spaceBetween,
-							children: [
-								Form(
-									key: _formKey,
-									child: Column(
-										mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-										children: [
-											TextFormField(
-												decoration: const InputDecoration(
-													filled: true,
-													fillColor: Colors.grey,
-													focusColor: Colors.green,
-												),
-												validator: (value) {
-													if (value.isEmpty) {
-														return 'Please enter track name';
-													}
-												},
-												onSaved: (val) => loopValue = val,
-												initialValue: loopValue,
-											),
-											Padding(
-												padding: const EdgeInsets.symmetric(vertical: 16.0),
-												child: RaisedButton(
-													color: Colors.grey[700],
-													onPressed: () {
-														if (_formKey.currentState.validate()) {
-															_formKey.currentState.save();
-															
-															Navigator.pop(context, val);
-														}
-														else {
-															Navigator.pop(context, null);
-														}											
-													},
-													child: Text("Add", style: TextStyle(color: Colors.white))
-												),
-											),
-											
-										],
-									),
-								),
-							],
-						),
-					),
-				],
-			),
-		}
-	),
 }
 
 Future<Track> addTrack(BuildContext context, idCounter) async {		//adding tacks dialog
@@ -213,7 +161,7 @@ Future<Track> addTrack(BuildContext context, idCounter) async {		//adding tacks 
 															if (link.contains('&')) {
 																link = link.split('&')[0];		
 															}
-															Track new_track = new Track(name, link, idCounter);
+															Track new_track = new Track(name, link, idCounter, 1);
 															Navigator.pop(context, new_track);
 														}
 														else {
