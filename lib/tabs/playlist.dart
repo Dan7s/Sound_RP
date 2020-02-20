@@ -26,8 +26,17 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 									title: Text(track.name.toString(), style: TextStyle(color: Colors.white)),
 									leading: isFirstTrack(track.id) ? Icon(Icons.play_circle_outline, color: Colors.green) :  Icon(Icons.drag_handle, color: Colors.green),
 									trailing: PopupMenuButton<int>(
-										onSelected: (value) {
-											if (value == 1){ deleteTrack(track); setState((){}); };
+										onSelected: (value) async{
+											if (value == 1){ deleteTrack(track); setState((){});
+											} else if (value == 2) {
+												Track new_track = Track(track.name, track.link, track.loop, track.id); 
+												new_track = await editTrack(context, new_track);
+												if (new_track.name != "" && new_track.link != "" && new_track != track) {
+													deleteTrack(track);
+													tracks.add(new_track);							//inserting on specyfic index!!! 
+												};
+												setState((){}); 
+											};
 										},
 										offset: Offset(0, 100),
 										color: Colors.grey[700],
@@ -39,6 +48,15 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 													children: <Widget>[
 														Icon(Icons.delete, color: Colors.green),
 														Text("Delete", style: TextStyle(color: Colors.white)),
+													],
+												),
+											),
+											PopupMenuItem(
+												value: 2,
+												child: Row(
+													children: <Widget>[
+														Icon(Icons.edit, color: Colors.green),
+														Text("Edit", style: TextStyle(color: Colors.white)),
 													],
 												),
 											),
@@ -60,8 +78,9 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 				),
 				floatingActionButton: FloatingActionButton(
 					onPressed: () async {
-						Track new_track = await addTrack(context, idCounter);
-						if (new_track != null) {
+						Track new_track = Track("", "", 1, idCounter); 
+						new_track = await editTrack(context, new_track);
+						if (new_track.name != "" && new_track.link != "" ) {
 							tracks.add(new_track);
 							idCounter += 1;
 							setState(() {});
@@ -78,8 +97,8 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 class Track {			//track obj class
 	final String name;
 	final String link;
-	final int id;
 	final int loop;
+	final int id;
 
 	Track(this.name, this.link, this.loop, this.id);
 }
@@ -96,10 +115,10 @@ Future deleteTrack(Track track) async { 		//track deleting
 	tracks.remove(track);
 }
 
-Future<Track> addTrack(BuildContext context, idCounter) async {		//adding tacks dialog
-	String name;
-	String link;
-	String id;
+Future<Track> editTrack(BuildContext context, track) async {		//editing tacks dialog
+	String name = track.name;
+	String link = track.link;
+	String id = track.id.toString();
 
 	final _formKey = GlobalKey<FormState>();
 
@@ -107,8 +126,8 @@ Future<Track> addTrack(BuildContext context, idCounter) async {		//adding tacks 
 		context: context,
 		builder: (BuildContext context) {
 			return SimpleDialog(
-				backgroundColor: Colors.black,			
-				title: Text("Add track", style: TextStyle(color: Colors.white)),
+				backgroundColor: Colors.grey[800],			
+				title: Text("Edit track", style: TextStyle(color: Colors.white)),
 				children: [
 					Center(
 						child: Column(
@@ -132,6 +151,7 @@ Future<Track> addTrack(BuildContext context, idCounter) async {		//adding tacks 
 														return 'Please enter track name';
 													}
 												},
+												initialValue: name,
 												onSaved: (val) => name = val,
 											),
 											TextFormField(
@@ -146,6 +166,7 @@ Future<Track> addTrack(BuildContext context, idCounter) async {		//adding tacks 
 														return 'Please enter link';
 													}
 												},
+												initialValue: link,
 												onSaved: (val) => link = val,
 											),
 											Padding(
@@ -161,14 +182,14 @@ Future<Track> addTrack(BuildContext context, idCounter) async {		//adding tacks 
 															if (link.contains('&')) {
 																link = link.split('&')[0];		
 															}
-															Track new_track = new Track(name, link, idCounter, 1);
+															Track new_track = new Track(name, link, 1, int.parse(id));
 															Navigator.pop(context, new_track);
 														}
 														else {
-															Navigator.pop(context, null);
+															Navigator.pop(context, track);
 														}											
 													},
-													child: Text("Add", style: TextStyle(color: Colors.white))
+													child: Text("Save", style: TextStyle(color: Colors.white))
 												),
 											),
 										],
