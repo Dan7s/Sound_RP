@@ -26,16 +26,17 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 									title: Text(track.name.toString(), style: TextStyle(color: Colors.white)),
 									leading: isFirstTrack(track.id) ? Icon(Icons.play_circle_outline, color: Colors.green) :  Icon(Icons.drag_handle, color: Colors.green),
 									trailing: PopupMenuButton<int>(
-										onSelected: (value) async{
-											if (value == 1){ deleteTrack(track); setState((){});
-											} else if (value == 2) {
+										onSelected: (value) setState((){
+											if (value == 1){ 		//delete button
+												deleteTrack(track);  
+											} else if (value == 2) {		//edit button
 												Track new_track = Track(track.name, track.link, track.loop, track.id); 
 												new_track = await editTrack(context, new_track);
 												if (new_track.name != "" && new_track.link != "" && new_track != track) {
+													track_index = tracks.indexOf(track);
 													deleteTrack(track);
-													tracks.add(new_track);							//inserting on specyfic index!!! 
+													tracks.insert(track_index, new_track);
 												};
-												setState((){}); 
 											};
 										},
 										offset: Offset(0, 100),
@@ -66,7 +67,7 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 								key: ObjectKey(track.id),
 							),
 					],					
-					onReorder: (int oldIndex, int newIndex) {
+					onReorder: (int oldIndex, int newIndex) {			//reordering list
 						setState(() {
 							if (newIndex > oldIndex) {
 								newIndex -= 1;
@@ -76,7 +77,7 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 						});
 					},
 				),
-				floatingActionButton: FloatingActionButton(
+				floatingActionButton: FloatingActionButton(			//adding action button
 					onPressed: () async {
 						Track new_track = Track("", "", 1, idCounter); 
 						new_track = await editTrack(context, new_track);
@@ -103,7 +104,7 @@ class Track {			//track obj class
 	Track(this.name, this.link, this.loop, this.id);
 }
 
-bool isFirstTrack(id) {
+bool isFirstTrack(id) {				//getting first track bool
 	if (get_next_track().id == id) {
 		return true;
 	} else {

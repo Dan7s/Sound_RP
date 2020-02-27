@@ -47,14 +47,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 	super.dispose();
   }
 
-  void _initAudioPlayer() {
-	audioPlayer.onDurationChanged.listen((duration) {
+  void _initAudioPlayer() {						//initing audio player, temporary implementation. AdvancedAudioPlayer will be needed
+	audioPlayer.onDurationChanged.listen((duration) {	//getting and setting Duration of playing instance
 		setState(() => _duration = duration);
 	});
-	audioPlayer.onAudioPositionChanged.listen((Duration p) => setState(() {
+	audioPlayer.onAudioPositionChanged.listen((Duration p) => setState(() {		//getting and setting actual position of playing instance
 		_position = p;
-	}));
-        audioPlayer.onPlayerCompletion.listen((event) {
+	}));	
+      audioPlayer.onPlayerCompletion.listen((event) {		//end of track event
 		_onComplete();
 		setState(() {
 			_position = Duration();
@@ -63,11 +63,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 	    });
   }
 	
-  void _onComplete() {
+  void _onComplete() {		//skiping to next when track completed
 	skip();
   }
 
-  Future play() async {
+  Future play() async {						//play func, getting next track from playlist tab and play it
 	final result = await audioPlayer.play("https://invidio.us/latest_version?id="+get_next_track().link+"&itag=251");
 	if (result == 1) {
 		setState(() {
@@ -85,7 +85,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 	}
   }
 
-  Future stop() async {
+  Future stop() async {	
 	final result = await audioPlayer.stop();
 	if (result == 1) {
 		setState(() {
