@@ -26,18 +26,19 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 									title: Text(track.name.toString(), style: TextStyle(color: Colors.white)),
 									leading: isFirstTrack(track.id) ? Icon(Icons.play_circle_outline, color: Colors.green) :  Icon(Icons.drag_handle, color: Colors.green),
 									trailing: PopupMenuButton<int>(
-										onSelected: (value) setState((){
+										onSelected: (value) async{
 											if (value == 1){ 		//delete button
 												deleteTrack(track);  
 											} else if (value == 2) {		//edit button
 												Track new_track = Track(track.name, track.link, track.loop, track.id); 
 												new_track = await editTrack(context, new_track);
 												if (new_track.name != "" && new_track.link != "" && new_track != track) {
-													track_index = tracks.indexOf(track);
+													int track_index = tracks.indexOf(track);
 													deleteTrack(track);
 													tracks.insert(track_index, new_track);
 												};
 											};
+											setState((){});
 										},
 										offset: Offset(0, 100),
 										color: Colors.grey[700],
@@ -116,7 +117,7 @@ Future deleteTrack(Track track) async { 		//track deleting
 	tracks.remove(track);
 }
 
-Future<Track> editTrack(BuildContext context, track) async {		//editing tacks dialog
+Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 	String name = track.name;
 	String link = track.link;
 	String id = track.id.toString();
