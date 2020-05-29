@@ -16,53 +16,24 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 		return Scaffold(
 			backgroundColor: Colors.black,
 			body:
-				ReorderableListView(
+				ReorderableListView(					//playlist
 					scrollDirection: Axis.vertical,
 					children: [
 						for (final track in tracks)
-							Card(
+							Card(				//playlist track tile
 								color: Colors.grey[800],
 								child: ListTile(
 									title: Text(track.name.toString(), style: TextStyle(color: Colors.white)),
 									leading: isFirstTrack(track.id) ? Icon(Icons.play_circle_outline, color: Colors.green) :  Icon(Icons.drag_handle, color: Colors.green),
-									trailing: PopupMenuButton<int>(
-										onSelected: (value) async{
-											if (value == 1){ 		//delete button
-												deleteTrack(track);  
-											} else if (value == 2) {		//edit button
-												Track new_track = Track(track.name, track.link, track.loop, track.id); 
-												new_track = await editTrack(context, new_track);
-												if (new_track.name != "" && new_track.link != "" && new_track != track) {
-													int track_index = tracks.indexOf(track);
-													deleteTrack(track);
-													tracks.insert(track_index, new_track);
-												};
-											};
-											setState((){});
-										},
-										offset: Offset(0, 100),
-										color: Colors.grey[700],
+									trailing: IconButton(						//Opening track menu
 										icon: Icon(Icons.more_vert, color: Colors.green),
-										itemBuilder: (context) => [
-											PopupMenuItem(
-												value: 1,
-												child: Row(
-													children: <Widget>[
-														Icon(Icons.delete, color: Colors.green),
-														Text("Delete", style: TextStyle(color: Colors.white)),
-													],
-												),
-											),
-											PopupMenuItem(
-												value: 2,
-												child: Row(
-													children: <Widget>[
-														Icon(Icons.edit, color: Colors.green),
-														Text("Edit", style: TextStyle(color: Colors.white)),
-													],
-												),
-											),
-										],								
+										tooltip: 'Track Menu',
+										onPressed: () async{ 
+											bool update = await trackMenu(context, track);	//setting state when needed
+											if (update) {
+												setState(() {});
+											}
+										},
 									),
 								),
 								key: ObjectKey(track.id),
@@ -113,8 +84,51 @@ bool isFirstTrack(id) {				//getting first track bool
 	}
 }
 
-Future deleteTrack(Track track) async { 		//track deleting
+void deleteTrack(Track track)  { 		//track deleting
 	tracks.remove(track);
+}
+
+Future<bool> trackMenu(BuildContext context, track) {				//Track Menu, finally is working when playing
+	return showDialog(
+		context: context,
+		builder: (BuildContext context) {
+			return SimpleDialog(
+				backgroundColor: Colors.grey[800],			
+				title: Text(track.name, style: TextStyle(color: Colors.white)),
+				children: [
+					RaisedButton(
+						color: Colors.grey[700],
+						child: Text("Edit", style: TextStyle(color: Colors.white)),
+						onPressed: () async{
+							Track new_track = Track(track.name, track.link, track.loop, track.id); 
+							new_track = await editTrack(context, new_track);
+							if (new_track.name != "" && new_track.link != "" && new_track != track) {
+								int track_index = tracks.indexOf(track);
+								deleteTrack(track);
+								tracks.insert(track_index, new_track);
+							};
+							Navigator.pop(context, true);
+						},
+					),
+					RaisedButton(
+						color: Colors.grey[700],
+						child: Text("Delete", style: TextStyle(color: Colors.white)),
+						onPressed: () {
+							deleteTrack(track);
+							Navigator.pop(context, true);
+						},
+					),
+					RaisedButton(
+						color: Colors.grey[700],
+						child: Text("Back", style: TextStyle(color: Colors.white)),
+						onPressed: () {
+							Navigator.pop(context, false);
+						},
+					),
+				],
+			);
+		},	
+	);
 }
 
 Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
