@@ -51,7 +51,7 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 				),
 				floatingActionButton: FloatingActionButton(			//adding action button
 					onPressed: () async {
-						Track new_track = Track("", "", 1, idCounter); 
+						Track new_track = Track("", "", 0, idCounter); 
 						new_track = await editTrack(context, new_track);
 						if (new_track.name != "" && new_track.link != "" ) {
 							tracks.add(new_track);
@@ -68,16 +68,16 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 }
 
 class Track {			//track obj class
-	final String name;
-	final String link;
-	final int loop;
-	final int id;
+	String name;
+	String link;
+	int loop;
+	int id;
 
 	Track(this.name, this.link, this.loop, this.id);
 }
 
 bool isFirstTrack(id) {				//getting first track bool
-	if (get_next_track().id == id) {
+	if (tracks.first.id == id) {
 		return true;
 	} else {
 		return false;
@@ -100,13 +100,10 @@ Future<bool> trackMenu(BuildContext context, track) {				//Track Menu, finally i
 						color: Colors.grey[700],
 						child: Text("Edit", style: TextStyle(color: Colors.white)),
 						onPressed: () async{
-							Track new_track = Track(track.name, track.link, track.loop, track.id); 
-							new_track = await editTrack(context, new_track);
-							if (new_track.name != "" && new_track.link != "" && new_track != track) {
-								int track_index = tracks.indexOf(track);
-								deleteTrack(track);
-								tracks.insert(track_index, new_track);
-							};
+							Track track_new = await editTrack(context, track);
+							track.name = track_new.name;
+							track.link = track_new.link;
+							track.loop = track_new.loop;
 							Navigator.pop(context, true);
 						},
 					),
@@ -134,6 +131,7 @@ Future<bool> trackMenu(BuildContext context, track) {				//Track Menu, finally i
 Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 	String name = track.name;
 	String link = track.link;
+	String loop = track.loop.toString();
 	String id = track.id.toString();
 
 	final _formKey = GlobalKey<FormState>();
@@ -170,6 +168,7 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 												initialValue: name,
 												onSaved: (val) => name = val,
 											),
+											Text("", style: TextStyle(color: Colors.white)),
 											TextFormField(
 												decoration: const InputDecoration(
 													hintText: 'Enter track link',
@@ -185,6 +184,22 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 												initialValue: link,
 												onSaved: (val) => link = val,
 											),
+											Text("Loop count:", style: TextStyle(color: Colors.white)),
+											TextFormField(
+												decoration: const InputDecoration(
+													hintText: 'Enter loop number, -1 = loop to skip',
+													filled: true,
+													fillColor: Colors.grey,
+													focusColor: Colors.green,
+												),
+												validator: (value) {
+													if (value.isEmpty) {
+														return 'Please loops count';
+													}
+												},
+												initialValue: loop,
+												onSaved: (val) => loop = val,
+											),
 											Padding(
 												padding: const EdgeInsets.symmetric(vertical: 16.0),
 												child: RaisedButton(
@@ -198,7 +213,7 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 															if (link.contains('&')) {
 																link = link.split('&')[0];		
 															}
-															Track new_track = new Track(name, link, 1, int.parse(id));
+															Track new_track = new Track(name, link, int.parse(loop), int.parse(id));
 															Navigator.pop(context, new_track);
 														}
 														else {
@@ -219,8 +234,4 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 		},	
 	);
 	
-}
-
-Track get_next_track() {			//func to geting first track`s link from queue by main.dart to play it
-	return(tracks.first);
 }

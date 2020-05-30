@@ -68,7 +68,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   }
 
   Future play() async {						//play func, getting next track from playlist tab and play it
-	final result = await audioPlayer.play("https://invidio.us/latest_version?id="+get_next_track().link+"&itag=251");
+	final result = await audioPlayer.play("https://invidio.us/latest_version?id="+tracks.first.link+"&itag=251");
 	if (result == 1) {
 		setState(() {
 			_playerState = PlayerState.playing;
@@ -96,12 +96,18 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 	}
   }
  
-  Future skip() async {
-	stop();
+  Future skip() async {					//skip function with loop managing 
 	if (tracks.isNotEmpty) {
-		deleteTrack(tracks.first);
-		play();
-	}
+		print(tracks.first.loop);
+		if (tracks.first.loop == 0) {
+			stop();
+			deleteTrack(tracks.first);
+			play();
+		} else {
+			tracks.first.loop = tracks.first.loop - 1;
+			play();
+		}
+	} 
   }
 
   @override
