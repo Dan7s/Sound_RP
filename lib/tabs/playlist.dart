@@ -29,10 +29,8 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 										icon: Icon(Icons.more_vert, color: Colors.green),
 										tooltip: 'Track Menu',
 										onPressed: () async{ 
-											bool update = await trackMenu(context, track);	//setting state when needed
-											if (update) {
-												setState(() {});
-											}
+											await trackMenu(context, track);	//setting state when needed
+											setState(() {});
 										},
 									),
 								),
@@ -70,10 +68,10 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 class Track {			//track obj class
 	String name;
 	String link;
-	int loop;
+	int repeat;
 	int id;
 
-	Track(this.name, this.link, this.loop, this.id);
+	Track(this.name, this.link, this.repeat, this.id);
 }
 
 bool isFirstTrack(id) {				//getting first track bool
@@ -88,7 +86,7 @@ void deleteTrack(Track track)  { 		//track deleting
 	tracks.remove(track);
 }
 
-Future<bool> trackMenu(BuildContext context, track) {				//Track Menu, finally is working when playing
+Future trackMenu(BuildContext context, track) {				//Track Menu, finally is working when playing
 	return showDialog(
 		context: context,
 		builder: (BuildContext context) {
@@ -98,28 +96,32 @@ Future<bool> trackMenu(BuildContext context, track) {				//Track Menu, finally i
 				children: [
 					RaisedButton(
 						color: Colors.grey[700],
+						highlightColor: Colors.green,
 						child: Text("Edit", style: TextStyle(color: Colors.white)),
 						onPressed: () async{
 							Track track_new = await editTrack(context, track);
-							track.name = track_new.name;
-							track.link = track_new.link;
-							track.loop = track_new.loop;
-							Navigator.pop(context, true);
+							if (track_new != null) {
+								track.name = track_new.name;
+								track.link = track_new.link;
+								track.repeat = track_new.repeat;
+							}
 						},
 					),
 					RaisedButton(
 						color: Colors.grey[700],
+						highlightColor: Colors.green,
 						child: Text("Delete", style: TextStyle(color: Colors.white)),
 						onPressed: () {
 							deleteTrack(track);
-							Navigator.pop(context, true);
+							Navigator.pop(context);
 						},
 					),
 					RaisedButton(
 						color: Colors.grey[700],
+						highlightColor: Colors.green,
 						child: Text("Back", style: TextStyle(color: Colors.white)),
 						onPressed: () {
-							Navigator.pop(context, false);
+							Navigator.pop(context);
 						},
 					),
 				],
@@ -131,7 +133,7 @@ Future<bool> trackMenu(BuildContext context, track) {				//Track Menu, finally i
 Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 	String name = track.name;
 	String link = track.link;
-	String loop = track.loop.toString();
+	String repeat = track.repeat.toString();
 	String id = track.id.toString();
 
 	final _formKey = GlobalKey<FormState>();
@@ -143,88 +145,105 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 				backgroundColor: Colors.grey[800],			
 				title: Text("Edit track", style: TextStyle(color: Colors.white)),
 				children: [
-					Center(
+					Form(
+						key: _formKey,
 						child: Column(
-							mainAxisAlignment: MainAxisAlignment.spaceBetween,
+							mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+							mainAxisSize: MainAxisSize.max,
 							children: [
-								Form(
-									key: _formKey,
-									child: Column(
-										crossAxisAlignment: CrossAxisAlignment.center,
-										mainAxisAlignment: MainAxisAlignment.spaceBetween,
-										children: [ 
-											TextFormField(
-												decoration: const InputDecoration(
-													hintText: 'Enter track name',
-													filled: true,
-													fillColor: Colors.grey,
-													focusColor: Colors.green,
-												),
-												validator: (value) {
-													if (value.isEmpty) {
-														return 'Please enter track name';
-													}
-												},
-												initialValue: name,
-												onSaved: (val) => name = val,
-											),
-											Text("", style: TextStyle(color: Colors.white)),
-											TextFormField(
-												decoration: const InputDecoration(
-													hintText: 'Enter track link',
-													filled: true,
-													fillColor: Colors.grey,
-													focusColor: Colors.green,
-												),
-												validator: (value) {
-													if (value.isEmpty) {
-														return 'Please enter link';
-													}
-												},
-												initialValue: link,
-												onSaved: (val) => link = val,
-											),
-											Text("Loop count:", style: TextStyle(color: Colors.white)),
-											TextFormField(
-												decoration: const InputDecoration(
-													hintText: 'Enter loop number, -1 = loop to skip',
-													filled: true,
-													fillColor: Colors.grey,
-													focusColor: Colors.green,
-												),
-												validator: (value) {
-													if (value.isEmpty) {
-														return 'Please loops count';
-													}
-												},
-												initialValue: loop,
-												onSaved: (val) => loop = val,
-											),
-											Padding(
-												padding: const EdgeInsets.symmetric(vertical: 16.0),
-												child: RaisedButton(
-													color: Colors.grey[700],
-													onPressed: () {
-														if (_formKey.currentState.validate()) {
-															_formKey.currentState.save();
-															if (link.contains('=')) {
-																link = link.split('=')[1];
-															}
-															if (link.contains('&')) {
-																link = link.split('&')[0];		
-															}
-															Track new_track = new Track(name, link, int.parse(loop), int.parse(id));
-															Navigator.pop(context, new_track);
-														}
-														else {
-															Navigator.pop(context, track);
-														}											
-													},
-													child: Text("Save", style: TextStyle(color: Colors.white))
-												),
-											),
-										],
+								TextFormField(
+									style: TextStyle(color: Colors.white),
+									decoration: const InputDecoration(
+										labelText: 'Name',
+										labelStyle: TextStyle(color: Colors.green),
+										filled: true,
+										fillColor: Color(0xFF616161),
+										focusedBorder: const OutlineInputBorder(
+										      borderSide: const BorderSide(color: Colors.green),
+										    ),
 									),
+									validator: (value) {
+										if (value.isEmpty) {
+											return 'Please enter track name';
+										}
+									},
+									initialValue: name,
+									onSaved: (val) => name = val,
+								),
+								Text(""),
+								TextFormField(
+									style: TextStyle(color: Colors.white),
+									keyboardType: TextInputType.url,
+									decoration: const InputDecoration(
+										labelText: 'Link',
+										labelStyle: TextStyle(color: Colors.green),
+										filled: true,
+										fillColor: Color(0xFF616161),
+										focusedBorder: const OutlineInputBorder(
+										      borderSide: const BorderSide(color: Colors.green),
+										    ),
+									),
+									validator: (value) {
+										if (value.isEmpty) {
+											return 'Please enter link';
+										}
+									},
+									initialValue: link,
+									onSaved: (val) => link = val,
+								),
+								Text(""),
+								TextFormField(
+									style: TextStyle(color: Colors.white),
+									keyboardType: TextInputType.number,
+									decoration: const InputDecoration(
+										labelText: 'Repeat',
+										labelStyle: TextStyle(color: Colors.green),
+										filled: true,
+										fillColor: Color(0xFF616161),
+										focusedBorder: const OutlineInputBorder(
+										      borderSide: const BorderSide(color: Colors.green),
+										    ),
+									),
+									validator: (value) {
+										if (value.isEmpty) {
+											return 'Please repeat count';
+										}
+									},
+									initialValue: repeat,
+									onSaved: (val) => repeat = val,
+								),
+								Text(""),
+								Row(
+									mainAxisAlignment: MainAxisAlignment.spaceAround,
+									mainAxisSize: MainAxisSize.max,
+									children: [
+										RaisedButton(
+											color: Colors.grey[700],
+											highlightColor: Colors.green,
+											onPressed: () {
+												Navigator.pop(context, null);
+											},
+											child: Text("Back", style: TextStyle(color: Colors.white))
+										),
+										RaisedButton(
+											color: Colors.grey[700],
+											highlightColor: Colors.green,
+											onPressed: () {
+												if (_formKey.currentState.validate()) {
+													_formKey.currentState.save();
+													if (link.contains('=')) {
+														link = link.split('=')[1];
+													}
+													if (link.contains('&')) {
+														link = link.split('&')[0];		
+													}
+													Track new_track = new Track(name, link, int.parse(repeat), int.parse(id));
+													Navigator.pop(context, new_track);
+												}											
+											},
+											child: Text("Save", style: TextStyle(color: Colors.white))
+										),
+									],
 								),
 							],
 						),

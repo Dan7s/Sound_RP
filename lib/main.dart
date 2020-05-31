@@ -96,15 +96,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 	}
   }
  
-  Future skip() async {					//skip function with loop managing 
+  Future skip() async {					//skip function with repeat managing 
 	if (tracks.isNotEmpty) {
-		print(tracks.first.loop);
-		if (tracks.first.loop == 0) {
+		if (tracks.first.repeat == 0) {
 			stop();
 			deleteTrack(tracks.first);
 			play();
 		} else {
-			tracks.first.loop = tracks.first.loop - 1;
+			tracks.first.repeat = tracks.first.repeat - 1;
 			play();
 		}
 	} 
