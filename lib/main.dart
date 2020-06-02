@@ -34,6 +34,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   get _isPaused => _playerState == PlayerState.paused;
   get _durationText => _duration.toString().split('.').first;
   get _positionText => _position.toString().split('.').first;
+  get _repeatCount => tracks.first.repeat.toString();
+  get _willRepeat => tracks.isNotEmpty ? tracks.first.repeat != 0 : false;
 
   void initState() {
 	super.initState();
@@ -139,9 +141,21 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 								tooltip: 'Next track',
 								onPressed: () => skip(),
 							),
+							IconButton(
+								icon: Icon(Icons.skip_next, size: 28.0, color: Colors.green),
+								tooltip: 'Next track',
+								onPressed: () => print(tracks.first.repeat),
+							),
 						],
 					),
-					Text("$_positionText" + "/" + "$_durationText", style: TextStyle(color: Colors.white)),
+					Row( 
+						mainAxisAlignment: MainAxisAlignment.center,
+						children: [
+							Text(tracks.isNotEmpty ?  "$_positionText" + "/" + "$_durationText " : "", style: TextStyle(color: Colors.white)),
+							_willRepeat ? Icon(Icons.repeat, size: 28.0, color: Colors.green) : Container(),
+							_willRepeat ? Text("$_repeatCount", style: TextStyle(color: Colors.white)) : Container(),
+						],
+					),
 					LinearProgressIndicator(
 						backgroundColor: Colors.grey[700],
 						valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
