@@ -1,5 +1,43 @@
 import 'package:flutter/material.dart';
 
+class DropdownFormField<T> extends FormField<T> {
+  DropdownFormField({
+    Key key,
+    InputDecoration decoration,
+    T initialValue,
+    TextStyle style,
+    List<DropdownMenuItem<T>> items,
+    bool autovalidate = false,
+    FormFieldSetter<T> onSaved,
+    FormFieldValidator<T> validator,
+  }) : super(
+          key: key,
+          onSaved: onSaved,
+          validator: validator,
+          autovalidate: autovalidate,
+          initialValue: items.contains(initialValue) ? initialValue : initialValue,
+          builder: (FormFieldState<T> field) {
+            final InputDecoration effectiveDecoration = (decoration ?? const InputDecoration())
+                .applyDefaults(Theme.of(field.context).inputDecorationTheme);
+
+            return InputDecorator(
+              decoration:
+                  effectiveDecoration.copyWith(errorText: field.hasError ? field.errorText : null),
+              isEmpty: field.value == '' || field.value == null,
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<T>(
+                  style: style,
+                  value: field.value,
+                  isDense: true,
+                  onChanged: field.didChange,
+                  items: items.toList(),
+                ),
+              ),
+            );
+          },
+        );
+}
+
 class PlaylistTab extends StatefulWidget {
 	@override
 	PlaylistState createState() => PlaylistState();
@@ -135,6 +173,9 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 	String link = track.link;
 	String repeat = track.repeat.toString();
 	String id = track.id.toString();
+	int startH = 0;
+	int startM = 0;
+	int startS = 0;
 
 	final _formKey = GlobalKey<FormState>();
 
@@ -147,105 +188,185 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 				children: [
 					Form(
 						key: _formKey,
-						child: Column(
-							mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-							mainAxisSize: MainAxisSize.max,
-							children: [
-								TextFormField(
-									style: TextStyle(color: Colors.white),
-									decoration: const InputDecoration(
-										labelText: 'Name',
-										labelStyle: TextStyle(color: Colors.green),
-										filled: true,
-										fillColor: Color(0xFF616161),
-										focusedBorder: const OutlineInputBorder(
-										      borderSide: const BorderSide(color: Colors.green),
-										    ),
-									),
-									validator: (value) {
-										if (value.isEmpty) {
-											return 'Please enter track name';
-										}
-									},
-									initialValue: name,
-									onSaved: (val) => name = val,
-								),
-								Text(""),
-								TextFormField(
-									style: TextStyle(color: Colors.white),
-									keyboardType: TextInputType.url,
-									decoration: const InputDecoration(
-										labelText: 'Link',
-										labelStyle: TextStyle(color: Colors.green),
-										filled: true,
-										fillColor: Color(0xFF616161),
-										focusedBorder: const OutlineInputBorder(
-										      borderSide: const BorderSide(color: Colors.green),
-										    ),
-									),
-									validator: (value) {
-										if (value.isEmpty) {
-											return 'Please enter link';
-										}
-									},
-									initialValue: link,
-									onSaved: (val) => link = val,
-								),
-								Text(""),
-								TextFormField(
-									style: TextStyle(color: Colors.white),
-									keyboardType: TextInputType.number,
-									decoration: const InputDecoration(
-										labelText: 'Repeat',
-										labelStyle: TextStyle(color: Colors.green),
-										filled: true,
-										fillColor: Color(0xFF616161),
-										focusedBorder: const OutlineInputBorder(
-										      borderSide: const BorderSide(color: Colors.green),
-										    ),
-									),
-									validator: (value) {
-										if (value.isEmpty) {
-											return 'Please repeat count';
-										}
-									},
-									initialValue: repeat,
-									onSaved: (val) => repeat = val,
-								),
-								Text(""),
-								Row(
-									mainAxisAlignment: MainAxisAlignment.spaceAround,
-									mainAxisSize: MainAxisSize.max,
-									children: [
-										RaisedButton(
-											color: Colors.grey[700],
-											highlightColor: Colors.green,
-											onPressed: () {
-												Navigator.pop(context, null);
-											},
-											child: Text("Back", style: TextStyle(color: Colors.white))
+						child: new Theme(
+							data: Theme.of(context).copyWith(
+								canvasColor: Color(0xFF616161),),
+							child: Column(
+								mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+								mainAxisSize: MainAxisSize.max,
+								children: [
+									TextFormField(
+										style: TextStyle(color: Colors.white),
+										decoration: const InputDecoration(
+											labelText: 'Name',
+											labelStyle: TextStyle(color: Colors.green),
+											filled: true,
+											fillColor: Color(0xFF616161),
+											focusedBorder: const OutlineInputBorder(
+											      borderSide: const BorderSide(color: Colors.green),
+											    ),
 										),
-										RaisedButton(
-											color: Colors.grey[700],
-											highlightColor: Colors.green,
-											onPressed: () {
-												if (_formKey.currentState.validate()) {
-													_formKey.currentState.save();
-													if (link.contains('=')) {
-														link = link.split('=')[1];
-													}
-													if (link.contains('&')) {
-														link = link.split('&')[0];		
-													}
-													Track new_track = new Track(name, link, int.parse(repeat), int.parse(id));
-													Navigator.pop(context, new_track);
-												}											
-											},
-											child: Text("Save", style: TextStyle(color: Colors.white))
+										validator: (value) {
+											if (value.isEmpty) {
+												return 'Please enter track name';
+											}
+										},
+										initialValue: name,
+										onSaved: (val) => name = val,
+									),
+									Text(""),
+									TextFormField(
+										style: TextStyle(color: Colors.white),
+										keyboardType: TextInputType.url,
+										decoration: const InputDecoration(
+											labelText: 'Link',
+											labelStyle: TextStyle(color: Colors.green),
+											filled: true,
+											fillColor: Color(0xFF616161),
+											focusedBorder: const OutlineInputBorder(
+											      borderSide: const BorderSide(color: Colors.green),
+											    ),
 										),
-									],
-								),
-							],
+										validator: (value) {
+											if (value.isEmpty) {
+												return 'Please enter link';
+											}
+										},
+										initialValue: link,
+										onSaved: (val) => link = val,
+									),
+									Text(""),
+									TextFormField(
+										style: TextStyle(color: Colors.white),
+										keyboardType: TextInputType.number,
+										decoration: const InputDecoration(
+											labelText: 'Repeat',
+											labelStyle: TextStyle(color: Colors.green),
+											filled: true,
+											fillColor: Color(0xFF616161),
+											focusedBorder: const OutlineInputBorder(
+											      borderSide: const BorderSide(color: Colors.green),
+											    ),
+										),
+										validator: (value) {
+											if (value.isEmpty) {
+												return 'Please input repeat count';
+											}
+										},
+										initialValue: repeat,
+										onSaved: (val) => repeat = val,
+									),
+									Text(""),
+									DropdownFormField<int>(
+										style: TextStyle(color: Colors.white),
+										items: List.generate(61, (index) {
+											return DropdownMenuItem<int>(
+												value: index,
+												child: Text('$index'),
+											);
+										}),
+										decoration: const InputDecoration(
+											labelText: 'Start Hour',
+											labelStyle: TextStyle(color: Colors.green),
+											filled: true,
+											fillColor: Color(0xFF616161),
+											focusedBorder: const OutlineInputBorder(
+											      borderSide: const BorderSide(color: Colors.green),
+											),
+										),
+										validator: (value) {
+											if (value == null) {
+												return 'Please input start time';	
+											}
+										},
+										initialValue: startH,
+										onSaved: (val) => startH = val,
+									),
+									DropdownFormField<int>(
+										style: TextStyle(color: Colors.white),
+										items: List.generate(61, (index) {
+											return DropdownMenuItem<int>(
+												value: index,
+												child: Text('$index'),
+											);
+										}),
+										decoration: const InputDecoration(
+											labelText: 'Start Minute',
+											labelStyle: TextStyle(color: Colors.green),
+											filled: true,
+											fillColor: Color(0xFF616161),
+											focusedBorder: const OutlineInputBorder(
+											      borderSide: const BorderSide(color: Colors.green),
+											),
+										),
+										validator: (value) {
+											if (value == null) {
+												return 'Please input start time';	
+											}
+										},
+										initialValue: startM,
+										onSaved: (val) => startM = val,
+									),
+									DropdownFormField<int>(
+										style: TextStyle(color: Colors.white),
+										items: List.generate(61, (index) {
+											return DropdownMenuItem<int>(
+												value: index,
+												child: Text('$index'),
+											);
+										}),
+										decoration: const InputDecoration(
+											labelText: 'Start Seconds',
+											labelStyle: TextStyle(color: Colors.green),
+											filled: true,
+											fillColor: Color(0xFF616161),
+											focusedBorder: const OutlineInputBorder(
+											      borderSide: const BorderSide(color: Colors.green),
+											),
+										),
+										validator: (value) {
+											if (value == null) {
+												return 'Please input start time';	
+											}
+										},
+										initialValue: startS,
+										onSaved: (val) => startS = val,
+									),
+									Text(""),
+									Row(
+										mainAxisAlignment: MainAxisAlignment.spaceAround,
+										mainAxisSize: MainAxisSize.max,
+										children: [
+											RaisedButton(
+												color: Colors.grey[700],
+												highlightColor: Colors.green,
+												onPressed: () {
+													Navigator.pop(context, null);
+												},
+												child: Text("Back", style: TextStyle(color: Colors.white))
+											),
+											RaisedButton(
+												color: Colors.grey[700],
+												highlightColor: Colors.green,
+												onPressed: () {
+													if (_formKey.currentState.validate()) {
+														_formKey.currentState.save();
+														if (link.contains('=')) {
+															link = link.split('=')[1];
+														}
+														if (link.contains('&')) {
+															link = link.split('&')[0];		
+														}
+														Track new_track = new Track(name, link, int.parse(repeat), int.parse(id));
+														Navigator.pop(context, new_track);
+													}											
+												},
+												child: Text("Save", style: TextStyle(color: Colors.white))
+											),
+										],
+									),
+								],
+							),
 						),
 					),	
 				],
