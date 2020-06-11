@@ -56,7 +56,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 	audioPlayer.onAudioPositionChanged.listen((Duration p) => setState(() {		//getting and setting actual position of playing instance
 		_position = p;
 	}));	
-      audioPlayer.onPlayerCompletion.listen((event) {		//end of track event
+	audioPlayer.onPlayerCompletion.listen((event) {		//end of track event
 		_onComplete();
 		setState(() {
 			_position = Duration();
@@ -72,6 +72,15 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   Future play() async {						//play func, getting next track from playlist tab and play it
 	final result = await audioPlayer.play("https://invidio.us/latest_version?id="+tracks.first.link+"&itag=251");
 	if (result == 1) {
+		setState(() {
+			_playerState = PlayerState.playing;
+		});	
+	}
+  }
+  
+  Future resume() async {
+  	final result = await audioPlayer.resume();
+  	if (result == 1) {
 		setState(() {
 			_playerState = PlayerState.playing;
 		});	
@@ -110,6 +119,19 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 		}
 	} 
   }
+  
+  Future seek(dur) async {
+  	pause();
+  	final result = await audioPlayer.seek(Duration(milliseconds: dur));
+  	resume();
+  }
+  
+  Future seekButton() async {
+  	var seekTo = await chooseTime(context, _position.inMilliseconds);
+  	if (seekTo != null) {
+  		seek(seekTo);
+  	}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +149,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 						mainAxisAlignment: MainAxisAlignment.center,
 						children: <Widget>[
 							IconButton(
+								icon: Icon(Icons.find_replace, size: 28.0, color: Colors.green),
+								tooltip: 'Seek',
+								onPressed: () => seekButton(),
+							),
+							IconButton(
 								icon: Icon(Icons.stop, size: 28.0, color: Colors.green),
 								tooltip: 'Stop',
 								onPressed: () => stop(),
@@ -143,7 +170,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 							),
 							IconButton(
 								icon: Icon(Icons.skip_next, size: 28.0, color: Colors.green),
-								tooltip: 'Next track',
+								tooltip: 'Force skip',
 								onPressed: () => print(tracks.first.repeat),
 							),
 						],

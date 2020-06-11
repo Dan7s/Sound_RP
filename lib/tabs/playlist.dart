@@ -1,43 +1,5 @@
 import 'package:flutter/material.dart';
 
-class DropdownFormField<T> extends FormField<T> {
-  DropdownFormField({
-    Key key,
-    InputDecoration decoration,
-    T initialValue,
-    TextStyle style,
-    List<DropdownMenuItem<T>> items,
-    bool autovalidate = false,
-    FormFieldSetter<T> onSaved,
-    FormFieldValidator<T> validator,
-  }) : super(
-          key: key,
-          onSaved: onSaved,
-          validator: validator,
-          autovalidate: autovalidate,
-          initialValue: items.contains(initialValue) ? initialValue : initialValue,
-          builder: (FormFieldState<T> field) {
-            final InputDecoration effectiveDecoration = (decoration ?? const InputDecoration())
-                .applyDefaults(Theme.of(field.context).inputDecorationTheme);
-
-            return InputDecorator(
-              decoration:
-                  effectiveDecoration.copyWith(errorText: field.hasError ? field.errorText : null),
-              isEmpty: field.value == '' || field.value == null,
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<T>(
-                  style: style,
-                  value: field.value,
-                  isDense: true,
-                  onChanged: field.didChange,
-                  items: items.toList(),
-                ),
-              ),
-            );
-          },
-        );
-}
-
 class PlaylistTab extends StatefulWidget {
 	@override
 	PlaylistState createState() => PlaylistState();
@@ -87,7 +49,7 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 				),
 				floatingActionButton: FloatingActionButton(			//adding action button
 					onPressed: () async {
-						Track new_track = Track("", "", 0, idCounter); 
+						Track new_track = Track("", "", 0, 0, idCounter); 
 						new_track = await editTrack(context, new_track);
 						if (new_track.name != "" && new_track.link != "" ) {
 							tracks.add(new_track);
@@ -107,9 +69,10 @@ class Track {			//track obj class
 	String name;
 	String link;
 	int repeat;
+	int startAt;
 	int id;
 
-	Track(this.name, this.link, this.repeat, this.id);
+	Track(this.name, this.link, this.repeat, this.startAt, this.id);
 }
 
 bool isFirstTrack(id) {				//getting first track bool
@@ -168,18 +131,187 @@ Future trackMenu(BuildContext context, track) {				//Track Menu, finally is work
 	);
 }
 
+Future<int> chooseTime(BuildContext context, ms) {			//pupup for seek bar button 
+	int startMS = ms;
+	int startS = 0;
+	int startM = 0;
+	int startH = 0;
+	if (ms >= 1000) {
+		startS = ms~/1000;
+		if (startS >= 60) {
+			startM = startS ~/ 60;
+			startS = startS - startM*60;
+		}
+		if (startM >= 60) {
+			startH = startM ~/ 60;
+			startM = startM - startH*60;
+		}
+	}
+	
+	final _formKey = GlobalKey<FormState>();
+	
+	return showDialog(
+		context: context,
+		builder: (BuildContext context) {
+			return SimpleDialog(
+				backgroundColor: Colors.grey[800],			
+				title: Text("Time input", style: TextStyle(color: Colors.white)),
+				children: [
+					new Theme(
+						data: Theme.of(context).copyWith(
+							canvasColor: Color(0xFF616161),),
+						child: Column(
+							mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+							mainAxisSize: MainAxisSize.max,
+							children: [
+								Row( 
+									mainAxisAlignment: MainAxisAlignment.spaceAround,
+									mainAxisSize: MainAxisSize.max,
+									children: [
+										Container(
+											width: 63.0,
+											child: DropdownButtonFormField<int>(
+												style: TextStyle(color: Colors.white),
+												items: List.generate(60, (index) {
+													return DropdownMenuItem<int>(
+														value: index,
+														child: Text('$index'),
+													);
+												}),
+												decoration: const InputDecoration(
+													labelText: 'H',
+													labelStyle: TextStyle(color: Colors.green),
+													filled: true,
+													fillColor: Color(0xFF616161),
+													focusedBorder: const OutlineInputBorder(
+													      borderSide: const BorderSide(color: Colors.green),
+													),
+												),
+												validator: (value) {
+													if (value == null) {
+														return 'Please input start time';	
+													}
+												},
+												value: startH,
+												onChanged: (int value) { startH = value; },
+											),
+										),
+										Text(":", style: TextStyle(color: Colors.white)),
+										Container(
+											width: 63.0,
+											child: DropdownButtonFormField<int>(
+												style: TextStyle(color: Colors.white),
+												items: List.generate(60, (index) {
+													return DropdownMenuItem<int>(
+														value: index,
+														child: Text('$index'),
+													);
+												}),
+												decoration: const InputDecoration(
+													labelText: 'M',
+													labelStyle: TextStyle(color: Colors.green),
+													filled: true,
+													fillColor: Color(0xFF616161),
+													focusedBorder: const OutlineInputBorder(
+													      borderSide: const BorderSide(color: Colors.green),
+													),
+												),
+												validator: (value) {
+													if (value == null) {
+														return 'Please input start time';	
+													}
+												},
+												value: startM,
+												onChanged: (int value) { startM = value; },
+											),
+										),
+										Text(":", style: TextStyle(color: Colors.white)),
+										Container(
+											width: 63.0,
+											child: DropdownButtonFormField<int>(
+												style: TextStyle(color: Colors.white),
+												items: List.generate(60, (index) {
+													return DropdownMenuItem<int>(
+														value: index,
+														child: Text('$index'),
+													);
+												}),
+												decoration: const InputDecoration(
+													labelText: 'S',
+													labelStyle: TextStyle(color: Colors.green),
+													filled: true,
+													fillColor: Color(0xFF616161),
+												),
+												validator: (value) {
+													if (value == null) {
+														return 'Please input start time';	
+													}
+												},
+												value: startS,
+												onChanged: (int value) { startS = value; },
+											),
+										),
+									]
+								),
+								Text(""),
+								Row(
+									mainAxisAlignment: MainAxisAlignment.spaceAround,
+									mainAxisSize: MainAxisSize.max,
+									children: [
+										RaisedButton(
+											color: Colors.grey[700],
+											highlightColor: Colors.green,
+											onPressed: () {
+												Navigator.pop(context, null);
+											},
+											child: Text("Back", style: TextStyle(color: Colors.white))
+										),
+										RaisedButton(
+											color: Colors.grey[700],
+											highlightColor: Colors.green,
+											onPressed: () {
+													startM = startM + startH*60;
+													startS = startS + startM*60;
+													startMS = startS*1000;
+													Navigator.pop(context, startMS);											
+											},
+											child: Text("Save", style: TextStyle(color: Colors.white))
+										),
+									],
+								),
+							],
+						),
+					),	
+				],
+			);	
+		}
+	);
+}
+
 Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 	String name = track.name;
 	String link = track.link;
 	String repeat = track.repeat.toString();
 	String id = track.id.toString();
-	int startH = 0;
-	int startM = 0;
+	int startMS = track.startAt;
 	int startS = 0;
+	int startM = 0;
+	int startH = 0;
+	if (startMS >= 1000) {
+		startS = startMS~/1000;
+		if (startS >= 60) {
+			startM = startS ~/ 60;
+			startS = startS - startM*60;
+		}
+		if (startM >= 60) {
+			startH = startM ~/ 60;
+			startM = startM - startH*60;
+		}
+	}
 
 	final _formKey = GlobalKey<FormState>();
 
-	return showDialog (
+	return showDialog(
 		context: context,
 		builder: (BuildContext context) {
 			return SimpleDialog(
@@ -257,80 +389,94 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 										onSaved: (val) => repeat = val,
 									),
 									Text(""),
-									DropdownFormField<int>(
-										style: TextStyle(color: Colors.white),
-										items: List.generate(61, (index) {
-											return DropdownMenuItem<int>(
-												value: index,
-												child: Text('$index'),
-											);
-										}),
-										decoration: const InputDecoration(
-											labelText: 'Start Hour',
-											labelStyle: TextStyle(color: Colors.green),
-											filled: true,
-											fillColor: Color(0xFF616161),
-											focusedBorder: const OutlineInputBorder(
-											      borderSide: const BorderSide(color: Colors.green),
+									Row( 
+										mainAxisAlignment: MainAxisAlignment.spaceAround,
+										mainAxisSize: MainAxisSize.max,
+										children: [
+											Container(
+												width: 63.0,
+												child: DropdownButtonFormField<int>(
+													style: TextStyle(color: Colors.white),
+													items: List.generate(60, (index) {
+														return DropdownMenuItem<int>(
+															value: index,
+															child: Text('$index'),
+														);
+													}),
+													decoration: const InputDecoration(
+														labelText: 'H',
+														labelStyle: TextStyle(color: Colors.green),
+														filled: true,
+														fillColor: Color(0xFF616161),
+														focusedBorder: const OutlineInputBorder(
+														      borderSide: const BorderSide(color: Colors.green),
+														),
+													),
+													validator: (value) {
+														if (value == null) {
+															return 'Please input start time';	
+														}
+													},
+													value: startH,
+													onChanged: (int value) { startH = value; },
+												),
 											),
-										),
-										validator: (value) {
-											if (value == null) {
-												return 'Please input start time';	
-											}
-										},
-										initialValue: startH,
-										onSaved: (val) => startH = val,
-									),
-									DropdownFormField<int>(
-										style: TextStyle(color: Colors.white),
-										items: List.generate(61, (index) {
-											return DropdownMenuItem<int>(
-												value: index,
-												child: Text('$index'),
-											);
-										}),
-										decoration: const InputDecoration(
-											labelText: 'Start Minute',
-											labelStyle: TextStyle(color: Colors.green),
-											filled: true,
-											fillColor: Color(0xFF616161),
-											focusedBorder: const OutlineInputBorder(
-											      borderSide: const BorderSide(color: Colors.green),
+											Text(":", style: TextStyle(color: Colors.white)),
+											Container(
+												width: 63.0,
+												child: DropdownButtonFormField<int>(
+													style: TextStyle(color: Colors.white),
+													items: List.generate(60, (index) {
+														return DropdownMenuItem<int>(
+															value: index,
+															child: Text('$index'),
+														);
+													}),
+													decoration: const InputDecoration(
+														labelText: 'M',
+														labelStyle: TextStyle(color: Colors.green),
+														filled: true,
+														fillColor: Color(0xFF616161),
+														focusedBorder: const OutlineInputBorder(
+														      borderSide: const BorderSide(color: Colors.green),
+														),
+													),
+													validator: (value) {
+														if (value == null) {
+															return 'Please input start time';	
+														}
+													},
+													value: startM,
+													onChanged: (int value) { startM = value; },
+												),
 											),
-										),
-										validator: (value) {
-											if (value == null) {
-												return 'Please input start time';	
-											}
-										},
-										initialValue: startM,
-										onSaved: (val) => startM = val,
-									),
-									DropdownFormField<int>(
-										style: TextStyle(color: Colors.white),
-										items: List.generate(61, (index) {
-											return DropdownMenuItem<int>(
-												value: index,
-												child: Text('$index'),
-											);
-										}),
-										decoration: const InputDecoration(
-											labelText: 'Start Seconds',
-											labelStyle: TextStyle(color: Colors.green),
-											filled: true,
-											fillColor: Color(0xFF616161),
-											focusedBorder: const OutlineInputBorder(
-											      borderSide: const BorderSide(color: Colors.green),
+											Text(":", style: TextStyle(color: Colors.white)),
+											Container(
+												width: 63.0,
+												child: DropdownButtonFormField<int>(
+													style: TextStyle(color: Colors.white),
+													items: List.generate(60, (index) {
+														return DropdownMenuItem<int>(
+															value: index,
+															child: Text('$index'),
+														);
+													}),
+													decoration: const InputDecoration(
+														labelText: 'S',
+														labelStyle: TextStyle(color: Colors.green),
+														filled: true,
+														fillColor: Color(0xFF616161),
+													),
+													validator: (value) {
+														if (value == null) {
+															return 'Please input start time';	
+														}
+													},
+													value: startS,
+													onChanged: (int value) { startS = value; },
+												),
 											),
-										),
-										validator: (value) {
-											if (value == null) {
-												return 'Please input start time';	
-											}
-										},
-										initialValue: startS,
-										onSaved: (val) => startS = val,
+										]
 									),
 									Text(""),
 									Row(
@@ -357,7 +503,10 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 														if (link.contains('&')) {
 															link = link.split('&')[0];		
 														}
-														Track new_track = new Track(name, link, int.parse(repeat), int.parse(id));
+														startM = startM + startH*60;
+														startS = startS + startM*60;
+														startMS = startS*1000;
+														Track new_track = new Track(name, link, int.parse(repeat), startMS, int.parse(id));
 														Navigator.pop(context, new_track);
 													}											
 												},
