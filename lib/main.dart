@@ -38,15 +38,15 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   get _willRepeat => tracks.isNotEmpty ? tracks.first.repeat != 0 : false;
 
   void initState() {
-	super.initState();
-	tab_controller = TabController(length: 3, vsync: this);
-	_initAudioPlayer();
+		super.initState();
+		tab_controller = TabController(length: 3, vsync: this);
+		_initAudioPlayer();
   }
 
   void dispose() {
-	audioPlayer.stop();
-	tab_controller.dispose();
-	super.dispose();
+		audioPlayer.stop();
+		tab_controller.dispose();
+		super.dispose();
   }
 
   void _initAudioPlayer() {						//initing audio player, temporary implementation. AdvancedAudioPlayer will be needed
@@ -70,12 +70,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   }
 
   Future play() async {						//play func, getting next track from playlist tab and play it
-	final result = await audioPlayer.play("https://invidio.us/latest_version?id="+tracks.first.link+"&itag=251");
-	if (result == 1) {
-		setState(() {
-			_playerState = PlayerState.playing;
-		});	
-	}
+		if (tracks.isNotEmpty) {
+			final result = await audioPlayer.play("https://invidio.us/latest_version?id=" + tracks.first.link + "&itag=251");
+			if (tracks.first.startAt != 0) {
+				await seek(tracks.first.startAt);
+			}
+			if (result == 1 ) {
+				setState(() {
+					_playerState = PlayerState.playing;
+				});
+			}
+		}
   }
   
   Future resume() async {
@@ -121,16 +126,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   }
   
   Future seek(dur) async {
-  	pause();
   	final result = await audioPlayer.seek(Duration(milliseconds: dur));
-  	resume();
+  	print(result);
   }
   
   Future seekButton() async {
-  	var seekTo = await chooseTime(context, _position.inMilliseconds);
-  	if (seekTo != null) {
-  		seek(seekTo);
-  	}
+		if (tracks.isNotEmpty) {
+			var seekTo = await chooseTime(context, _position.inMilliseconds);
+			if (seekTo != null) {
+				seek(seekTo);
+			}
+		}
   }
 
   @override
@@ -165,7 +171,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 							),
 							IconButton(
 								icon: Icon(Icons.skip_next, size: 28.0, color: Colors.green),
-								tooltip: 'Next track',
+								tooltip: 'Skip',
 								onPressed: () => skip(),
 							),
 							IconButton(

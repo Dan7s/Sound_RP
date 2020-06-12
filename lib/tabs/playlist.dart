@@ -18,25 +18,25 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 			body:
 				ReorderableListView(					//playlist
 					scrollDirection: Axis.vertical,
-					children: [
-						for (final track in tracks)
-							Card(				//playlist track tile
-								color: Colors.grey[800],
-								child: ListTile(
-									title: Text(track.name.toString(), style: TextStyle(color: Colors.white)),
-									leading: isFirstTrack(track.id) ? Icon(Icons.play_circle_outline, color: Colors.green) :  Icon(Icons.drag_handle, color: Colors.green),
-									trailing: IconButton(						//Opening track menu
-										icon: Icon(Icons.more_vert, color: Colors.green),
-										tooltip: 'Track Menu',
-										onPressed: () async{ 
-											await trackMenu(context, track);	//setting state when needed
-											setState(() {});
-										},
-									),
-								),
-								key: ObjectKey(track.id),
-							),
-					],					
+					children: <Widget>[
+					    	for (final track in tracks)
+					    		Card(				//playlist track tile
+					    			color: Colors.grey[800],
+					    			child: ListTile(
+					    				title: Text(track.name.toString(), style: TextStyle(color: Colors.white)),
+					    				leading: isFirstTrack(track.id) ? Icon(Icons.play_circle_outline, color: Colors.green) :  Icon(Icons.drag_handle, color: Colors.green),
+					    				trailing: IconButton(						//Opening track menu
+					    					icon: Icon(Icons.more_vert, color: Colors.green),
+					    					tooltip: 'Track Menu',
+					    					onPressed: () async{
+					    						await trackMenu(context, track);	//setting state when needed
+					    						setState(() {});
+					    					},
+					    				),
+					    			),
+					    			key: ObjectKey(track.id),
+					    		),
+					],
 					onReorder: (int oldIndex, int newIndex) {			//reordering list
 						setState(() {
 							if (newIndex > oldIndex) {
@@ -49,9 +49,9 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 				),
 				floatingActionButton: FloatingActionButton(			//adding action button
 					onPressed: () async {
-						Track new_track = Track("", "", 0, 0, idCounter); 
+						var new_track = Track("", "", 0, 0, idCounter);
 						new_track = await editTrack(context, new_track);
-						if (new_track.name != "" && new_track.link != "" ) {
+						if (new_track != null ) {
 							tracks.add(new_track);
 							idCounter += 1;
 							setState(() {});
@@ -100,7 +100,7 @@ Future trackMenu(BuildContext context, track) {				//Track Menu, finally is work
 						highlightColor: Colors.green,
 						child: Text("Edit", style: TextStyle(color: Colors.white)),
 						onPressed: () async{
-							Track track_new = await editTrack(context, track);
+							var track_new = await editTrack(context, track);
 							if (track_new != null) {
 								track.name = track_new.name;
 								track.link = track_new.link;
@@ -131,7 +131,7 @@ Future trackMenu(BuildContext context, track) {				//Track Menu, finally is work
 	);
 }
 
-Future<int> chooseTime(BuildContext context, ms) {			//pupup for seek bar button 
+Future<int> chooseTime(BuildContext context, ms) {			//popup for seek bar button
 	int startMS = ms;
 	int startS = 0;
 	int startM = 0;
@@ -147,9 +147,7 @@ Future<int> chooseTime(BuildContext context, ms) {			//pupup for seek bar button
 			startM = startM - startH*60;
 		}
 	}
-	
-	final _formKey = GlobalKey<FormState>();
-	
+
 	return showDialog(
 		context: context,
 		builder: (BuildContext context) {
