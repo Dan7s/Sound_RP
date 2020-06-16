@@ -483,7 +483,7 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 														if (link.contains('&')) {
 															link = link.split('&')[0];		
 														}
-														if (name.isEmpty || link != track.link) {
+														if (name.isEmpty || link != track.link || name == "Youtube Video") {			//if name is empty in new track, link was changed when editing or when name could not be scrapped earlier, scrap title
 															name = await getTrackTitle(link);
 														}
 														startM = startM + startH*60;
