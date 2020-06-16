@@ -26,6 +26,8 @@ dependencies:
   #audioplayer: ^0.5.2
   audioplayers: ^0.13.5
   http: ^0.12.0+3
+  html: ^0.13.3+3 #downgraded because of requirements of beautifulsoup
+  beautifulsoup: ^0.0.1
 
 dev_dependencies:
   flutter_test:

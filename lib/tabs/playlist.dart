@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sound_rp/title_scraper.dart';
 
 class PlaylistTab extends StatefulWidget {
 	@override
@@ -325,25 +326,6 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 								mainAxisAlignment: MainAxisAlignment.spaceEvenly,
 								mainAxisSize: MainAxisSize.max,
 								children: [
-									TextFormField(
-										style: TextStyle(color: Colors.white),
-										decoration: const InputDecoration(
-											labelText: 'Name',
-											labelStyle: TextStyle(color: Colors.green),
-											filled: true,
-											fillColor: Color(0xFF616161),
-											focusedBorder: const OutlineInputBorder(
-											      borderSide: const BorderSide(color: Colors.green),
-											    ),
-										),
-										validator: (value) {
-											if (value.isEmpty) {
-												return 'Please enter track name';
-											}
-										},
-										initialValue: name,
-										onSaved: (val) => name = val,
-									),
 									Text(""),
 									TextFormField(
 										style: TextStyle(color: Colors.white),
@@ -492,7 +474,7 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 											RaisedButton(
 												color: Colors.grey[700],
 												highlightColor: Colors.green,
-												onPressed: () {
+												onPressed: () async {
 													if (_formKey.currentState.validate()) {
 														_formKey.currentState.save();
 														if (link.contains('=')) {
@@ -500,6 +482,9 @@ Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
 														}
 														if (link.contains('&')) {
 															link = link.split('&')[0];		
+														}
+														if (name.isEmpty || link != track.link) {
+															name = await getTrackTitle(link);
 														}
 														startM = startM + startH*60;
 														startS = startS + startM*60;
