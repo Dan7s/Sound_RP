@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'dart:async';
 
 import 'package:sound_rp/tabs/playlist.dart';
@@ -24,11 +25,14 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
+	StreamSubscription _intentDataStreamSubscription;
   TabController tab_controller;
   AudioPlayer audioPlayer = new AudioPlayer();
   PlayerState _playerState = PlayerState.stopped;
   Duration _duration = Duration();
   Duration _position = Duration();
+  int last_seek = 0;
+  String sharedLink = "";
 
   get _isPlaying => _playerState == PlayerState.playing;
   get _isPaused => _playerState == PlayerState.paused;
@@ -40,6 +44,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   void initState() {
 		super.initState();
 		tab_controller = TabController(length: 3, vsync: this);
+		_initSharingGetter();
 		_initAudioPlayer();
   }
 
@@ -48,6 +53,31 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 		tab_controller.dispose();
 		super.dispose();
   }
+
+  void _initSharingGetter() {
+		_intentDataStreamSubscription =
+				ReceiveSharingIntent.getTextStream().listen((String value) {
+					setState(() {
+						String link = value;
+						if (link.contains('=')) {
+							link = link.split('=')[1];
+						}
+						if (link.contains('&')) {
+							link = link.split('&')[0];
+						}
+						var newTrack = Track("", link, 0, 0, idCounter);
+						addTrack(newTrack);
+					});
+				}, onError: (err) {
+					print("getLinkStream error: $err");
+				});
+		//ReceiveSharingIntent.getInitialText().then((String value) {
+		//	setState(() async {
+		//		var newTrack = Track("", value, 0, 0, idCounter);
+		//		addTrack(newTrack);
+		//	});
+		//});
+	}
 
   void _initAudioPlayer() {						//initing audio player, temporary implementation. AdvancedAudioPlayer will be needed
 	audioPlayer.onDurationChanged.listen((duration) {	//getting and setting Duration of playing instance
@@ -66,7 +96,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   }
 	
   void _onComplete() {		//skiping to next when track completed
-	skip();
+		skip(1);
   }
 
   Future play() async {						//play func, getting next track from playlist tab and play it
@@ -112,14 +142,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 	}
   }
  
-  Future skip() async {					//skip function with repeat managing 
+  Future skip(snum) async {					//skip function with repeat managing
 	if (tracks.isNotEmpty) {
 		if (tracks.first.repeat == 0) {
 			stop();
 			deleteTrack(tracks.first);
 			play();
 		} else {
-			tracks.first.repeat = tracks.first.repeat - 1;
+			tracks.first.repeat = tracks.first.repeat - snum;
 			play();
 		}
 	} 
@@ -127,7 +157,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   
   Future seek(dur) async {
   	final result = await audioPlayer.seek(Duration(milliseconds: dur));
-  	print(result);
+  	last_seek = dur;
   }
   
   Future seekButton() async {
@@ -172,12 +202,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 							IconButton(
 								icon: Icon(Icons.skip_next, size: 28.0, color: Colors.green),
 								tooltip: 'Skip',
-								onPressed: () => skip(),
+								onPressed: () => skip(1),
 							),
 							IconButton(
 								icon: Icon(Icons.skip_next, size: 28.0, color: Colors.green),
 								tooltip: 'Force skip',
-								onPressed: () => print(tracks.first.repeat),
+								onPressed: () {
+									skip(tracks.first.repeat);
+								}
 							),
 						],
 					),
@@ -192,10 +224,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 					LinearProgressIndicator(
 						backgroundColor: Colors.grey[700],
 						valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-						value: (_position.inMilliseconds < _duration.inMilliseconds &&
-							_position.inMilliseconds > 0)
+						value: (_position.inMilliseconds < _duration.inMilliseconds && _position.inMilliseconds > 0 && last_seek != _position.inMilliseconds)
 							? _position.inMilliseconds / _duration.inMilliseconds : 
-							(_playerState == PlayerState.playing) ? null : 0.0,	
+							(_playerState == PlayerState.playing) ? null : 0.0,
 					),
 				],
 			),

@@ -7,11 +7,11 @@ class PlaylistTab extends StatefulWidget {
 }
 
 List<Track> tracks = [];		//tracks list obj
+int idCounter = 0;
 
 class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixin<PlaylistTab>{ 	// main playlist tab obj 
 	@override
 	bool get wantKeepAlive => true;
-	int idCounter = 0;
 
 	Widget build(BuildContext context) {
 		return Scaffold(
@@ -52,11 +52,8 @@ class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixi
 					onPressed: () async {
 						var new_track = Track("", "", 0, 0, idCounter);
 						new_track = await editTrack(context, new_track);
-						if (new_track != null ) {
-							tracks.add(new_track);
-							idCounter += 1;
-							setState(() {});
-						};
+						addTrack(new_track);
+						setState(() {});
 					},
 					child: Icon(Icons.add),
 					tooltip: 'Add track',
@@ -74,6 +71,16 @@ class Track {			//track obj class
 	int id;
 
 	Track(this.name, this.link, this.repeat, this.startAt, this.id);
+}
+
+void addTrack(Track newTrack) async {
+	if (newTrack != null ) {
+		if (newTrack.name == "" && newTrack.link != "") {
+			newTrack.name = await getTrackTitle(newTrack.link);
+		}
+		tracks.add(newTrack);
+		idCounter += 1;
+	};
 }
 
 bool isFirstTrack(id) {				//getting first track bool
@@ -287,7 +294,7 @@ Future<int> chooseTime(BuildContext context, ms) {			//popup for seek bar button
 	);
 }
 
-Future<Track> editTrack(BuildContext context, track) {		//editing tacks dialog
+Future<Track> editTrack(BuildContext context, track) async {		//editing tacks dialog
 	String name = track.name;
 	String link = track.link;
 	String repeat = track.repeat.toString();
