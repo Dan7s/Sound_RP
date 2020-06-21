@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:sound_rp/title_scraper.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 class PlaylistTab extends StatefulWidget {
 	@override
@@ -9,9 +11,34 @@ class PlaylistTab extends StatefulWidget {
 List<Track> tracks = [];		//tracks list obj
 int idCounter = 0;
 
-class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixin<PlaylistTab>{ 	// main playlist tab obj 
+class PlaylistState extends State<PlaylistTab> with AutomaticKeepAliveClientMixin<PlaylistTab>{ 	// main playlist tab obj
+	StreamSubscription _intentDataStreamSubscription;
 	@override
 	bool get wantKeepAlive => true;
+
+	void initState() {
+		super.initState();
+		_initSharingGetter();
+	}
+
+	void _initSharingGetter() {
+		_intentDataStreamSubscription =
+				ReceiveSharingIntent.getTextStream().listen((String value) async {
+					String link = value;
+					if (link.contains('=')) {
+						link = link.split('=')[1];
+					}
+					if (link.contains('&')) {
+						link = link.split('&')[0];
+					}
+					var newTrack = Track("", link, 0, 0, idCounter);
+					newTrack = await editTrack(context, newTrack);
+					addTrack(newTrack);
+					setState(() { });
+				}, onError: (err) {
+					print("getLinkStream error: $err");
+				});
+	}
 
 	Widget build(BuildContext context) {
 		return Scaffold(
@@ -511,6 +538,5 @@ Future<Track> editTrack(BuildContext context, track) async {		//editing tacks di
 				],
 			);
 		},	
-	);
-	
+	);	
 }

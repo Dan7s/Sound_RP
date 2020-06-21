@@ -25,7 +25,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
-	StreamSubscription _intentDataStreamSubscription;
   TabController tab_controller;
   AudioPlayer audioPlayer = new AudioPlayer();
   PlayerState _playerState = PlayerState.stopped;
@@ -44,7 +43,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   void initState() {
 		super.initState();
 		tab_controller = TabController(length: 3, vsync: this);
-		_initSharingGetter();
 		_initAudioPlayer();
   }
 
@@ -53,31 +51,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 		tab_controller.dispose();
 		super.dispose();
   }
-
-  void _initSharingGetter() {
-		_intentDataStreamSubscription =
-				ReceiveSharingIntent.getTextStream().listen((String value) {
-					setState(() {
-						String link = value;
-						if (link.contains('=')) {
-							link = link.split('=')[1];
-						}
-						if (link.contains('&')) {
-							link = link.split('&')[0];
-						}
-						var newTrack = Track("", link, 0, 0, idCounter);
-						addTrack(newTrack);
-					});
-				}, onError: (err) {
-					print("getLinkStream error: $err");
-				});
-		//ReceiveSharingIntent.getInitialText().then((String value) {
-		//	setState(() async {
-		//		var newTrack = Track("", value, 0, 0, idCounter);
-		//		addTrack(newTrack);
-		//	});
-		//});
-	}
 
   void _initAudioPlayer() {						//initing audio player, temporary implementation. AdvancedAudioPlayer will be needed
 	audioPlayer.onDurationChanged.listen((duration) {	//getting and setting Duration of playing instance
