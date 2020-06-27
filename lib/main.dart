@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:flutter_media_notification/flutter_media_notification.dart';
 import 'dart:async';
 
 import 'package:sound_rp/tabs/playlist.dart';
@@ -44,6 +45,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 		super.initState();
 		tab_controller = TabController(length: 3, vsync: this);
 		_initAudioPlayer();
+		_initNotificationListener();
   }
 
   void dispose() {
@@ -51,6 +53,19 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 		tab_controller.dispose();
 		super.dispose();
   }
+
+  void _initNotificationListener() {
+		MediaNotification.setListener('play', () {
+			resume();
+		});
+		MediaNotification.setListener('pause', () {
+			pause();
+		});
+		MediaNotification.setListener('next', () {
+			skip(1);
+		});
+	}
+
 
   void _initAudioPlayer() {						//initing audio player, temporary implementation. AdvancedAudioPlayer will be needed
 	audioPlayer.onDurationChanged.listen((duration) {	//getting and setting Duration of playing instance
@@ -78,11 +93,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 			if (tracks.first.startAt != 0) {
 				await seek(tracks.first.startAt);
 			}
-			if (result == 1 ) {
+			if (result == 1) {
 				setState(() {
 					_playerState = PlayerState.playing;
+					MediaNotification.showNotification(title: tracks.first.name, author: tracks.first.repeat.toString());
 				});
 			}
+		} else {
+			stop();
 		}
   }
   
@@ -100,19 +118,21 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 	if (result == 1) {
 		setState(() {
 			_playerState = PlayerState.paused;
+			MediaNotification.showNotification(title: tracks.first.name, author: tracks.first.repeat.toString(), isPlaying : false);
 		});	
 	}
   }
 
   Future stop() async {	
 	final result = await audioPlayer.stop();
-	if (result == 1) {
-		setState(() {
-			_playerState = PlayerState.stopped;
-			_position = Duration();
-			_duration = Duration();
-		});	
-	}
+		if (result == 1) {
+			setState(() {
+				_playerState = PlayerState.stopped;
+				_position = Duration();
+				_duration = Duration();
+				MediaNotification.hideNotification();
+			});
+		}
   }
  
   Future skip(snum) async {					//skip function with repeat managing
