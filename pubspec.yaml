@@ -30,6 +30,7 @@ dependencies:
   receive_sharing_intent: ^1.4.0+2
   flutter_media_notification: ^1.2.6
   flutter_downloader: ^1.4.4
+  path_provider: ^1.6.11
 
 dev_dependencies:
   flutter_test:
